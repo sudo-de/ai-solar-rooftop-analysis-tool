@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment folder
+venv/
+*.pt
+*.dylib
+
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Pytest cache
+.pytest_cache/
+
+# VS Code settings folder
+.vscode/
+
+# Environment variables file
+.env
+
+# Logs
+logs/
+*.log
+
+# system files
+.DS_Store

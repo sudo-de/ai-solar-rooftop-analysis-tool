@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL Python files
+__pycache__/
+*.py[cod]
+*.pyd
+
+# Virtual environments
+env/
+venv/
+
+# Logs and temporary files
+logs/
+outputs/
+temp/
+*.log
+
+# Git files
+.git/
+.gitignore
+
+# Archives
+*.zip
+
+# Python environment metadata
+.Python
+
+# VS Code settings (optional)
+.vscode/
