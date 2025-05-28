@@ -28,9 +28,6 @@ COPY screenshots/ screenshots/
 # Copy documentation
 COPY Implementation_Documentation.md Example_Analyses.md Performance_Metrics.md README.md ./
 
-# Copy .env if exists
-COPY /.env /.env
-
 # Create runtime directories
 RUN mkdir -p logs outputs temp
 
