@@ -41,4 +41,4 @@ RUN python generate_screenshots.py
 EXPOSE 7860
 
 # Run Streamlit app
-CMD ["streamlit", "run", "streamlit_app.py", "--server.port=7860", "--server.fileWatcherType=none"]
+CMD ["streamlit", "run", "main.py", "--server.headless", "true", "--server.port=7860", "--server.fileWatcherType=none"]
