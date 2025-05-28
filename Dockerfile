@@ -35,7 +35,7 @@ RUN mkdir -p logs outputs temp
 RUN python generate_sample_image.py
 RUN python generate_screenshots.py
 
-EXPOSE 7860
+EXPOSE 8501
 
 # Run Streamlit app
-CMD ["streamlit", "run", "main.py", "--server.headless", "true", "--server.port=7860", "--server.fileWatcherType=none"]
+CMD ["streamlit", "run", "main.py", "--server.headless", "true", "--server.port=8501", "--server.fileWatcherType=none"]

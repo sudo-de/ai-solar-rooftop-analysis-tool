@@ -41,15 +41,15 @@ jobs:
         OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
         OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       run: |
-        docker run -d --name solar-streamlit -p 7860:7860 \
+        docker run -d --name solar-streamlit -p 8501:8501 \
           -e OPENWEATHERMAP_API_KEY="$OPENWEATHERMAP_API_KEY" \
           -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
-          solar-tool streamlit run main.py --server.headless true --server.port 7860
+          solar-tool streamlit run main.py --server.headless true --server.port 8501
         sleep 15
 
     - name: Smoke test Streamlit app
       run: |
-        curl --fail http://localhost:7860 || (echo "Streamlit app did not start" && exit 1)
+        curl --fail http://localhost:8501 || (echo "Streamlit app did not start" && exit 1)
 
     - name: Stop Streamlit container
       run: |
