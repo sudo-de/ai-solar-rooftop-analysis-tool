@@ -1,34 +1,47 @@
-name: Streamlit App CI
+name: CI - Build, Test, Streamlit
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  run-streamlit:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
-
-    - name: Install dependencies
+    - name: Build Docker image
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        docker build -t solar-tool .
 
-    - name: Run Streamlit app
+    - name: Run tests inside Docker
       run: |
-        nohup streamlit run main.py --server.headless true --server.port 7860 &
-        sleep 10
-        curl http://localhost:7860
+        docker run --rm solar-tool
 
-    - name: Run Tests
+  run-streamlit-smoke-test:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Build Docker image
+      run: docker build -t solar-tool .
+
+    - name: Run Streamlit app in background
       run: |
-        pytest
+        docker run -d --name solar-streamlit -p 7860:7860 solar-tool streamlit run main.py --server.headless true --server.port 7860
+        sleep 15
+
+    - name: Smoke test Streamlit port
+      run: |
+        curl --fail http://localhost:7860 || (echo "Streamlit app did not start" && exit 1)
+
+    - name: Stop and remove container
+      run: |
+        docker stop solar-streamlit
+        docker rm solar-streamlit

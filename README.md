@@ -9,7 +9,7 @@ This project has been birthed on the basis of an AI-based application that perfo
 - **Exports**: Creates reports in PDF, CSV, Excel, and JSON formats for the analysis results.
 - **Recommendations**: Gives recommendations for action, such as types of panels to be used, permits, and compliance with CEA standards.
 - **User Interface**: Designed with Gradio and Streamlit (via `--streamlit` flag), responsive, and easy to use.
-- **Testing:** Includes 6 passing tests in `test-main.py` for core functionality and UI validation.
+- **Testing:** Includes 6 passing tests in `test_main.py` for core functionality and UI validation.
   
 
 ## Setup Instructions

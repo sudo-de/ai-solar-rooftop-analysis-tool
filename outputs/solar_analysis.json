@@ -1,0 +1,51 @@
+[
+  {
+    "rooftop_id": 1,
+    "area_m2": 100.0,
+    "orientation": "South",
+    "obstructions": "none",
+    "surface_type": "Flat",
+    "suitability": 8,
+    "panel_type": "monocrystalline",
+    "annual_energy_kwh": 10000,
+    "monthly_energy_kwh": [
+      800.0,
+      900.0,
+      1000.0,
+      900.0,
+      900.0,
+      800.0,
+      700.0,
+      800.0,
+      800.0,
+      900.0,
+      800.0,
+      700.0
+    ],
+    "system_size_kw": 5.27,
+    "total_cost_inr": 75395.15,
+    "annual_savings_inr": 78000.0,
+    "monthly_savings_inr": [
+      6240.0,
+      7020.0,
+      7800.0,
+      7020.0,
+      7020.0,
+      6240.0,
+      5460.0,
+      6240.0,
+      6240.0,
+      7020.0,
+      6240.0,
+      5460.0
+    ],
+    "payback_period_years": 4.0,
+    "recommendations": [
+      "Highly suitable (flat rooftop); use monocrystalline panels (24.70% efficiency).",
+      "Secure permits from local discom (e.g., DTL in New Delhi).",
+      "Comply with CEA standards (IS/IEC 61730).",
+      "Clean panels 2-4 times yearly; use IoT monitoring.",
+      "Leverage net metering under PM Surya Ghar Yojana."
+    ]
+  }
+]
