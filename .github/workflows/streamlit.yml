@@ -1,4 +1,4 @@
-name: CI - Build, Test, Streamlit
+name: CI - Build, Test, Deploy Streamlit
 
 on:
   push:
@@ -11,37 +11,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
-
-    - name: Build Docker image
-      run: |
-        docker build -t solar-tool .
-
-    - name: Run tests inside Docker
-      run: |
-        docker run --rm solar-tool
-
-  run-streamlit-smoke-test:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
     - name: Build Docker image
       run: docker build -t solar-tool .
 
-    - name: Run Streamlit app in background
+    - name: Run tests inside Docker
+      env:
+        OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
+        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       run: |
-        docker run -d --name solar-streamlit -p 7860:7860 solar-tool streamlit run main.py --server.headless true --server.port 7860
+        docker run --rm \
+          -e OPENWEATHERMAP_API_KEY="$OPENWEATHERMAP_API_KEY" \
+          -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
+          solar-tool
+
+  run-streamlit:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build Docker image
+      run: docker build -t solar-tool .
+
+    - name: Run Streamlit app in detached mode
+      env:
+        OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
+        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      run: |
+        docker run -d --name solar-streamlit -p 7860:7860 \
+          -e OPENWEATHERMAP_API_KEY="$OPENWEATHERMAP_API_KEY" \
+          -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
+          solar-tool streamlit run main.py --server.headless true --server.port 7860
         sleep 15
 
-    - name: Smoke test Streamlit port
+    - name: Smoke test Streamlit app
       run: |
         curl --fail http://localhost:7860 || (echo "Streamlit app did not start" && exit 1)
 
-    - name: Stop and remove container
+    - name: Stop Streamlit container
       run: |
         docker stop solar-streamlit
         docker rm solar-streamlit
