@@ -22,14 +22,25 @@ import sys
 import tempfile
 
 # Configure logging
-os.makedirs("logs", exist_ok=True)  # Add this line
+os.makedirs("logs", exist_ok=True)  # Ensure logs directory exists
+log_file = "logs/solar_analysis.log"
+try:
+    # Set permissions for log file
+    if not os.path.exists(log_file):
+        open(log_file, "a").close()
+        os.chmod(log_file, 0o666)  # Read/write for all
+    handlers = [
+        logging.FileHandler(log_file),
+        logging.StreamHandler()
+    ]
+except (PermissionError, OSError) as e:
+    print(f"Warning: Cannot write to log file ({e}). Using console logging only.")
+    handlers = [logging.StreamHandler()]
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("logs/solar_analysis.log"),
-        logging.StreamHandler()
-    ]
+    handlers=handlers
 )
 logger = logging.getLogger(__name__)
 
@@ -659,23 +670,24 @@ if __name__ == "__main__":
             else:
                 logger.info("Running on CPU")
         except ImportError as e:
-            logger.error(f"PyTorch import failed: {e}")
+            logger.error(f"Failed to import PyTorch: {e}")
             raise ImportError("PyTorch is required for YOLO image analysis. Please install torch==2.5.0.")
         
         if "--streamlit" in sys.argv:
-            logger.info("Launching Streamlit interface")
+            logger.info("Starting Streamlit application")
             os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
-            os.environ["PYTHONPATH"] = os.path.dirname(os.path.abspath(__file__)) + os.pathsep + os.environ.get("PYTHONPATH", "")
-            os.system("streamlit run streamlit_app.py --server.fileWatcherType none --server.port 7860")
+            os.environ["PYTHONPATH"] = os.path.dirname(os.path.abspath(__file__))
+            os.pathsep + os.environ.get("PYTHONPATH", "")
+            os.system("streamlit run streamlit_app.py --server.port=7860 --server.fileWatcherType=none")
         else:
-            logger.info("Launching Gradio interface")
+            logger.info("Starting Gradio application")
             iface = create_interface()
             iface.launch(server_name="0.0.0.0", server_port=7860, share=False)
     except Exception as e:
-        logger.error(f"Failed to launch interface: {e}")
-        print(f"Error launching interface: {e}")
+        logger.error(f"Failed to start application: {e}")
+        print(f"Error starting application: {e}")
         raise
     finally:
-        logger.info("Closing interface")
+        logger.info("Application shutdown")
         if 'iface' in locals():
             iface.close()
