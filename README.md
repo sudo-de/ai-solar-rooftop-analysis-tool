@@ -1,4 +1,4 @@
-# AI Solar Rooftop Analysis Tool
+# AI Solar Rooftop Analysis
 This project has been birthed on the basis of an AI-based application that performs the analysis for rooftop solar potential through satellite imagery for the Wattmonk internship assessment. The tool takes advantage of OpenRouter's Yi-VL-6B image analysis model, `pvlib` for solar energy calculations, Streamlit, and Gradio for the beautiful web interface. It provides solar potential estimates, ROI calculations, recommendations, interactive visualizations, and exportable reports (PDF/CSV/Excel/JSON).
 
 ## Features
