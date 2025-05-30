@@ -34,15 +34,16 @@ COPY Implementation_Documentation.md Example_Analyses.md Performance_Metrics.md 
 # Copy .env if it exists
 COPY .env* ./
 
-# Create runtime directories
-RUN mkdir -p logs outputs temp
+# Create runtime directories with write permissions
+RUN mkdir -p logs outputs temp && \
+    chmod -R 777 logs outputs temp
 
 # Generate samples and screenshots
 RUN python generate_sample_image.py
 RUN python generate_screenshots.py
 
 # Expose default Streamlit port
-EXPOSE 8501
+EXPOSE 7860
 
 # Run Streamlit app
-CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.fileWatcherType=none"]
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=7860", "--server.fileWatcherType=none"]
