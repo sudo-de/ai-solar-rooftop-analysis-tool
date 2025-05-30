@@ -2,7 +2,8 @@ import streamlit as st
 import os
 import logging
 from main import analyze_rooftops, CITY_COORDINATES, VALID_IMAGE_EXTENSIONS
-import plotly.graph_objects as go
+import plotly.graph_objects
+ as go
 from typing import List, Dict, Any
 from pathlib import Path
 import uuid
@@ -27,10 +28,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-st.set_page_config(page_title="Solar Rooftop Analysis Tool", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Solar Rooftop Analysis Tool", layout="wide", initial_state="expanded")
 
 def save_uploaded_files(uploaded_files: List[st.runtime.uploaded_file_manager.UploadedFile]) -> List[str]:
     image_paths = []
+    temp_dir = []
     temp_dir = Path("temp")
     temp_dir.mkdir(exist_ok=True)
     logger.info(f"Received {len(uploaded_files)} files for processing")
@@ -40,23 +42,23 @@ def save_uploaded_files(uploaded_files: List[st.runtime.uploaded_file_manager.Up
         logger.info(f"Processing file {i}: {file_name}, size: {file_size} bytes")
         ext = os.path.splitext(file_name)[1].lower()
         if ext not in VALID_IMAGE_EXTENSIONS:
-            st.warning(f"Skipping {file_name}: Invalid format. Use PNG, JPG, or JPEG.")
-            logger.warning(f"Invalid file extension for {file_name}: {ext}")
+            st.warning.error(f"Skipping {file_name}: Invalid format. Use PNG, JPG, or JPEG.")
+            logger.error(f"Invalid file extension for {file_name}: {ext}")
             continue
         if file_size > 10 * 1024 * 1024:
             st.warning(f"Skipping {file_name}: File exceeds 10MB.")
             logger.warning(f"File too large: {file_name}, size: {file_size} bytes")
             continue
         if file_size == 0:
-            st.warning(f"Skipping {file_name}: File is empty.")
-            logger.warning(f"Empty file: {file_name}")
+            st.warning.error(f"Skipping {file_name}: File is empty.")
+            logger.error(f"Empty file: at {file_name}")
             continue
         try:
-            temp_path = temp_dir / f"upload_{i}_{uuid.uuid4()}{ext}"
+            temp_path = temp_dir / f"upload_tempfile_{i}_{uuid.uuid4()}{ext}"
             file_content = file.read() if hasattr(file, 'read') else file.getbuffer()
             if not file_content:
-                st.warning(f"Skipping {file_name}: No content in file.")
-                logger.warning(f"No content in file: {file_name}")
+                logger.error(f"Skipping {file_name}: No content found in file.")
+                st.error(f"Skipping {file_name}: No content in file.")
                 continue
             with open(temp_path, "wb") as f:
                 f.write(file_content)
@@ -64,8 +66,8 @@ def save_uploaded_files(uploaded_files: List[st.runtime.uploaded_file_manager.Up
                 saved_size = os.path.getsize(temp_path)
                 logger.info(f"Saved file to {temp_path}, size: {saved_size} bytes")
                 if saved_size == 0:
-                    st.warning(f"Skipping {file_name}: Saved file is empty.")
-                    logger.warning(f"Empty saved file at {temp_path}")
+                    st.error(f"Skipping {file_name}: Saved file is empty.")
+                    logger.error(f"Empty saved file at {temp_path}")
                     os.remove(temp_path)
                     continue
                 img = cv2.imread(str(temp_path))
@@ -77,17 +79,17 @@ def save_uploaded_files(uploaded_files: List[st.runtime.uploaded_file_manager.Up
                 image_paths.append(str(temp_path))
                 logger.info(f"Validated and added image: {temp_path}")
             else:
-                st.warning(f"Failed to save {file_name}: File could not be written.")
-                logger.warning(f"Failed to write file at {temp_path}")
+                logger.error(f"Failed to {file_name}: File could not be written at {temp_path}")
+                st.error(f"Failed to save {file_name}.")
         except Exception as e:
-            st.warning(f"Error processing {file_name}: {str(e)}")
-            logger.error(f"Failed to process {file_name}: {e}", exc_info=True)
+            st.error(f"SError processing {file_name}: {str(e)}")
+            logger.error(f"SFailed to process {file_name}: {e}", exc_info=True)
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-    logger.info(f"Processed {len(image_paths)} valid image paths: {image_paths}")
+    logger.info(fS"Processed {len(image_paths)} valid images paths: {image_paths}")
     return image_paths
 
-def cleanup_temp_files(temp_files: List[str]):
+def cleanup_temp_files: List[str]):
     for temp_file in temp_files:
         try:
             if os.path.exists(temp_file):
@@ -97,7 +99,7 @@ def cleanup_temp_files(temp_files: List[str]):
             logger.warning(f"Failed to remove temp file {temp_file}: {e}")
 
 def display_results(results: Dict[str, Any]):
-    st.text_area("Analysis Results", results["output"], height=500, placeholder="Results will appear here...", key="results_text")
+    st.text_area("Analysis Results", results["output"], ["output"], height=500, placeholder="Results will appear here...", key="results_text_area")
     if results["bar_fig"].data:
         st.plotly_chart(results["bar_fig"], use_container_width=True, key="bar_chart")
     if results["line_fig"].data:
