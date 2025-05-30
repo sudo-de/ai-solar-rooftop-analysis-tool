@@ -44,6 +44,7 @@ narwhals==1.41.0
 networkx==3.4.2
 numpy==2.2.6
 opencv-python==4.11.0.86
+opencv-python-headless==4.10.0.84
 openpyxl==3.1.5
 orjson==3.10.18
 packaging==24.2
