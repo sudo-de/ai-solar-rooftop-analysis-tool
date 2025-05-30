@@ -7,51 +7,60 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
+  build-test-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
 
-    - name: Build Docker image
-      run: docker build -t solar-tool .
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Run tests inside Docker
-      env:
-        OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
-        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      run: |
-        docker run --rm \
-          -e OPENWEATHERMAP_API_KEY="$OPENWEATHERMAP_API_KEY" \
-          -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
-          solar-tool
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:latest
+            cache-to=type=gha,mode=max
+            cache-from=type=gha
 
-  run-streamlit:
-    needs: build-and-test
-    runs-on: ubuntu-latest
+      - name: Build Docker image
+        run: docker build --cache-from=type=gha --cache-to=type=gha,mode=max -t solar-tool .
 
-    steps:
-    - uses: actions/checkout@v3
+      - name: Run tests inside Docker
+        env:
+          OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          docker run --rm \
+            -e OPENWEATHERMAP_API_KEY="$OPENWEATHERMAP_API_KEY" \
+            -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
+            solar-tool python -m pytest test_main.py -v --cov
 
-    - name: Build Docker image
-      run: docker build -t solar-tool .
+      - name: Run Streamlit app in detached mode
+        env:
+          OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          docker run -d --name solar-streamlit -p 7860:7860 \
+            -e OPENWEATHERMAP_API_KEY="$OPENWEATHERMAP_API_KEY" \
+            -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
+            solar-tool
+          sleep 10
 
-    - name: Run Streamlit app in detached mode
-      env:
-        OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
-        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      run: |
-        docker run -d --name solar-streamlit -p 8501:8501 \
-          -e OPENWEATHERMAP_API_KEY="$OPENWEATHERMAP_API_KEY" \
-          -e OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
-          solar-tool streamlit run main.py --server.headless true --server.port 8501
-        sleep 15
+      - name: Smoke test Streamlit app
+        run: |
+          curl --fail --retry 3 --retry-delay 2 http://localhost:7860/healthz || (echo "Streamlit app did not start" && exit 1)
 
-    - name: Smoke test Streamlit app
-      run: |
-        curl --fail http://localhost:8501 || (echo "Streamlit app did not start" && exit 1)
-
-    - name: Stop Streamlit container
-      run: |
-        docker stop solar-streamlit
-        docker rm solar-streamlit
+      - name: Stop Streamlit container
+        run: |
+          docker stop solar-streamlit
+          docker rm solar-streamlit
