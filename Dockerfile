@@ -1,7 +1,9 @@
 # Stage 1: Build dependencies
 FROM python:3.12-slim AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libpq-dev git-lfs libgl1 libglib2.0-0 && \
+    build-essential libpq-dev git-lfs \
+    libgl1 libglib2.0-0 libsm6 libxext6 libxrender-dev \
+    libgl1-mesa-dri mesa-utils && \
     rm -rf /var/lib/apt/lists/* && \
     git lfs install && \
     pip install --no-cache-dir --upgrade pip
@@ -12,7 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Stage 2: Final image
 FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 libglib2.0-0 && \
+    libgl1 libglib2.0-0 libsm6 libxext6 libxrender-dev \
+    libgl1-mesa-dri && \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
