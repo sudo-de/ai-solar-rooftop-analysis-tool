@@ -22,7 +22,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY main.py streamlit_app.py test-main.py generate_sample_image.py generate_screenshots.py ./
+COPY main.py streamlit_app.py test_main.py generate_sample_image.py generate_screenshots.py ./
 
 # Conditionally copy samples and screenshots if exists
 COPY samples/ samples/
