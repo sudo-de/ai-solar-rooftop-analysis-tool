@@ -36,32 +36,54 @@ def save_uploaded_files(uploaded_files: List[st.runtime.uploaded_file_manager.Up
     logger.info(f"Received {len(uploaded_files)} files for processing")
     for i, file in enumerate(uploaded_files):
         file_name = file.name if hasattr(file, 'name') else f"file_{uuid.uuid4()}"
-        logger.info(f"Processing file {i}: {file_name}, size: {file.size if hasattr(file, 'size') else 'unknown'} bytes")
+        file_size = file.size if hasattr(file, 'size') else 0
+        logger.info(f"Processing file {i}: {file_name}, size: {file_size} bytes")
         ext = os.path.splitext(file_name)[1].lower()
         if ext not in VALID_IMAGE_EXTENSIONS:
             st.warning(f"Skipping {file_name}: Invalid format. Use PNG, JPG, or JPEG.")
             logger.warning(f"Invalid file extension for {file_name}: {ext}")
             continue
+        if file_size > 10 * 1024 * 1024:
+            st.warning(f"Skipping {file_name}: File exceeds 10MB.")
+            logger.warning(f"File too large: {file_name}, size: {file_size} bytes")
+            continue
+        if file_size == 0:
+            st.warning(f"Skipping {file_name}: File is empty.")
+            logger.warning(f"Empty file: {file_name}")
+            continue
         try:
             temp_path = temp_dir / f"upload_{i}_{uuid.uuid4()}{ext}"
+            file_content = file.read() if hasattr(file, 'read') else file.getbuffer()
+            if not file_content:
+                st.warning(f"Skipping {file_name}: No content in file.")
+                logger.warning(f"No content in file: {file_name}")
+                continue
             with open(temp_path, "wb") as f:
-                file_content = file.read() if hasattr(file, 'read') else file.getbuffer()
                 f.write(file_content)
-            if os.path.exists(temp_path) and os.path.getsize(temp_path) > 0:
-                img = cv2.imread(str(temp_path))
-                if img is not None:
-                    image_paths.append(str(temp_path))
-                    logger.info(f"Saved valid image to {temp_path}")
-                else:
-                    st.warning(f"Skipping {file_name}: Corrupted or unreadable image.")
-                    logger.warning(f"Corrupted image at {temp_path}")
+            if os.path.exists(temp_path):
+                saved_size = os.path.getsize(temp_path)
+                logger.info(f"Saved file to {temp_path}, size: {saved_size} bytes")
+                if saved_size == 0:
+                    st.warning(f"Skipping {file_name}: Saved file is empty.")
+                    logger.warning(f"Empty saved file at {temp_path}")
                     os.remove(temp_path)
+                    continue
+                img = cv2.imread(str(temp_path))
+                if img is None:
+                    st.warning(f"Skipping {file_name}: Corrupted or unreadable image.")
+                    logger.warning(f"Corrupted or unreadable image at {temp_path}")
+                    os.remove(temp_path)
+                    continue
+                image_paths.append(str(temp_path))
+                logger.info(f"Validated and added image: {temp_path}")
             else:
-                st.warning(f"Failed to save {file_name}: File is empty or invalid.")
-                logger.warning(f"Empty or invalid file at {temp_path}")
+                st.warning(f"Failed to save {file_name}: File could not be written.")
+                logger.warning(f"Failed to write file at {temp_path}")
         except Exception as e:
             st.warning(f"Error processing {file_name}: {str(e)}")
-            logger.error(f"Failed to save {file_name}: {e}", exc_info=True)
+            logger.error(f"Failed to process {file_name}: {e}", exc_info=True)
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
     logger.info(f"Processed {len(image_paths)} valid image paths: {image_paths}")
     return image_paths
 
